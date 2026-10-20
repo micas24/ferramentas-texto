@@ -88,7 +88,7 @@ function corpo(){
  var inf=lista('Infra');if(inf.length)p.push('Infraestrutura: '+jn(inf)+'.');
  var sv=lista('Servicos');if(sv.length)p.push('Serviços: '+jn(sv)+'.');
  var ru=lista('Rural');if(ru.length)p.push('Na área rural: '+jn(ru)+'.');
- var cd=[];if(d.ano)cd.push('Construção de '+d.ano);if(d.ref2)cd.push('reforma em '+d.ref2);var co=cd.length?jn(cd)+'.':'';
+ var co='';
  if(d.fin==='Sim')co+=(co?' ':'')+'Aceita financiamento.';if(d.perm==='Sim')co+=(co?' ':'')+'Aceita permuta.';if(d.pet)co+=(co?' ':'')+'Aceita pet.';if(co)p.push(co);
  if(local&&cid)p.push('Localizado '+prep(local)+' '+local+', em '+cid+'.');else if(cid)p.push('Localizado em '+cid+'.');
  if(d.ref)p.push('Referência: '+d.ref+'.');
