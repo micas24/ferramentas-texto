@@ -100,7 +100,8 @@ function textoAtual(){
  return paras.join('\n\n').trim();
 }
 var FRASE='Se você procura comprar casa em condomínio no interior de São Paulo, especialmente em Indaiatuba, nós da Azevedo Alves temos várias opções.';
-var semFrase=function(t){return t.replace(/\s*Se voc[êe] procura comprar[^.]*Azevedo Alves[^.]*\.?/gi,'').trim()};
+var AVISO='Imóvel sujeito a alteração sem aviso prévio.';
+var semFrase=function(t){return t.replace(/\s*Se voc[êe] procura comprar[^.]*Azevedo Alves[^.]*\.?/gi,'').replace(/\s*Im[óo]vel sujeito a altera[çc][ãa]o sem aviso pr[ée]vio\.?/gi,'').trim()};
 var quebrar=function(t){var out=[],lista=[];var fecha=function(){if(lista.length){out.push(lista.join('\n'));lista=[]}};t.replace(/\r/g,'').split(/\n+/).map(function(l){return l.trim()}).filter(Boolean).forEach(function(l){if(l.length<60&&!/[.!?]$/.test(l)){lista.push(l);return}fecha();l.split(/(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ])/).forEach(function(f){if(f.trim())out.push(f.trim())})});fecha();return out.join('\n\n')};
 var EV=[[/\b(linda|lindo|maravilhos[ao]|imperd[ií]vel|incr[ií]vel|espetacular|fant[áa]stic[ao])\b/i,'adjetivo vazio'],[/\b(AT|AC|dorms?|qtos?)\b|c\/|s\//,'abreviação'],[/bem[- ]vind/i,'saudação'],[/R\$\s?\d/,'preço'],[/[☀-➿]|[\uD83C-\uDBFF][\uDC00-\uDFFF]/,'emoji']];
 
@@ -132,7 +133,7 @@ function render(keepText){
  var r=resumo();q('rs').textContent=r.s;q('cr').textContent=r.s.length+'/'+LIM;q('cr').className='n'+(r.s.length>LIM?' o':'');
  if(!q('ti').dataset.touched)q('ti').value=titulo();
  q('ct').textContent=q('ti').value.length+'/'+TLIM;
- if(!keepText){editado=null;var base=quebrar(semFrase(modo==='atual'?textoAtual():corpo()));q('ds').value=r.s+(base?'\n\n'+base:'')+'\n\n'+FRASE}
+ if(!keepText){editado=null;var base=quebrar(semFrase(modo==='atual'?textoAtual():corpo()));q('ds').value=r.s+(base?'\n\n'+base:'')+'\n\n'+(d.cond?FRASE+'\n\n':'')+AVISO}
  q('cd').textContent=q('ds').value.length+' caracteres';
  var ch=q('ch');ch.innerHTML='';cands.forEach(function(c){var b=D.createElement('button');b.className='chip';var i=dest.indexOf(c[0]);b.setAttribute('aria-pressed',i>=0);b.innerHTML=(i>=0?'<b>'+(i+1)+'</b>':'')+esc(c[1]);b.onclick=function(){var j=dest.indexOf(c[0]);if(j>=0)dest.splice(j,1);else if(dest.length<4)dest.push(c[0]);render(false)};ch.appendChild(b)});
  var conc=r.it.filter(function(x){return /\d|piscina|gourmet|churrasqueira|quadra|sauna|lago|pomar/i.test(x)}).length;
