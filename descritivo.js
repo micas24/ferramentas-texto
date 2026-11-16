@@ -2,7 +2,7 @@
 function run(auto){
 var LIM=135,TLIM=150;
 var D=document,$=function(i){return D.getElementById(i)};
-if(!$('txTituloSite')||!$('txDescricaoSite')){if(!auto)alert('Abra um imóvel na Kenlo (Imóveis > Alterar) e clique no botão de novo.');return;}
+if(!$('txTituloSite')||!$('txDescricaoSite')){if(!auto)alert('Abra a ficha de um imóvel na Kenlo (Novo imóvel ou Alterar) e clique no botão de novo.');return;}
 if(window.__dkT)clearInterval(window.__dkT);
 var old=D.getElementById('dk-host');if(old)old.remove();
 var v=function(i){var e=$(i)||D.querySelector('[name="'+i+'"]');return e&&e.value?String(e.value).trim():''};
@@ -41,13 +41,15 @@ var d={
  ano:v('txAnoConstrucao'),ref2:v('txAnoReforma'),pet:tem('aceita_pet'),
  titulo:v('txTituloSite'),desc:$('txDescricaoSite').value
 };
+if(/^selecione/i.test(d.tipo))d.tipo='';
 if(!d.vagas)d.vagas=d.vc+d.vd;
+var N=window.__dkN||(window.__dkN={nt:'',px:'',ref:''});if(N.ref&&N.ref!==d.ref){N.nt='';N.px=''}N.ref=d.ref;
 var pret=d.venda&&d.loc?'para venda ou locação':d.loc?'para alugar':'à venda';
 var terreno=/^terreno|^lote/i.test(d.tipo);
 var local=d.cond||(d.bairro?'bairro '+d.bairro:''),cid=[d.cidade,d.uf].filter(Boolean).join('/');
 
 var cands=[];
-if(d.suites)cands.push(['suites',pl(d.suites,'suíte','suítes')]);else if(d.dorm)cands.push(['dorm',pl(d.dorm,'dormitório','dormitórios')]);
+if(d.suites)cands.push(['suites',d.dorm>d.suites?pl(d.dorm,'dormitório','dormitórios')+' ('+pl(d.suites,'suíte','suítes')+')':pl(d.suites,'suíte','suítes')]);else if(d.dorm)cands.push(['dorm',pl(d.dorm,'dormitório','dormitórios')]);
 if(tem('piscina'))cands.push(['piscina','piscina']);
 if(tem('varanda_gourmet'))cands.push(['varanda_gourmet','varanda gourmet']);
 if(tem('churrasqueira'))cands.push(['churrasqueira','churrasqueira']);
@@ -59,7 +61,7 @@ if(d.pet)cands.push(['pet','aceita pet']);
 var AUTO=['suites','dorm','piscina','varanda_gourmet','churrasqueira','at','ac'];
 var dest=[];
 var ganchoAuto=d.fin==='Sim'&&d.perm==='Sim'?'Aceita financiamento e permuta':d.fin==='Sim'?'Aceita financiamento':d.perm==='Sim'?'Aceita permuta':'';
-var gancho='auto',modo='atual',editado=null;
+var gancho='auto',modo=d.desc.trim()?'atual':'novo',editado=null;
 
 function resumo(){
  var cab=d.tipo+' '+pret;if(local)cab+=' '+prep(local)+' '+local;if(cid)cab+=local?', '+cid:' em '+cid;
@@ -90,7 +92,8 @@ function corpo(){
  var ru=lista('Rural');if(ru.length)p.push('Na área rural: '+jn(ru)+'.');
  var co='';
  if(d.fin==='Sim')co+=(co?' ':'')+'Aceita financiamento.';if(d.perm==='Sim')co+=(co?' ':'')+'Aceita permuta.';if(d.pet)co+=(co?' ':'')+'Aceita pet.';if(co)p.push(co);
- if(local&&cid)p.push('Localizado '+prep(local)+' '+local+', em '+cid+'.');else if(cid)p.push('Localizado em '+cid+'.');
+ if(N.nt.trim())p.push(N.nt.trim());
+ var lc='';if(local&&cid)lc='Localizado '+prep(local)+' '+local+', em '+cid+'.';else if(cid)lc='Localizado em '+cid+'.';if(N.px.trim())lc+=(lc?' ':'')+N.px.trim();if(lc)p.push(lc);
  if(d.ref)p.push('Referência: '+d.ref+'.');
  return p.join('\n\n');
 }
@@ -117,13 +120,14 @@ R.innerHTML='<style>'+
 'ul{list-style:none;margin:0;padding:0;display:grid;gap:4px}li.ok:before{content:"✓ ";color:#2f6b4f;font-weight:700}li.no:before{content:"! ";color:#b3261e;font-weight:700}'+
 '.al{background:#fbf0dc;color:#7a4800;border-radius:7px;padding:7px 9px;font-size:13px}.seg{display:flex;gap:12px;flex-wrap:wrap}.seg label{display:flex;gap:5px;align-items:center}.seg input{width:auto}'+
 '.b{font:600 14px system-ui,sans-serif;border-radius:8px;padding:9px 14px;cursor:pointer;border:1px solid #2f6b4f}.b1{background:#2f6b4f;color:#fff}.b2{background:#fff;color:#2f6b4f}.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.ok2{color:#2f6b4f;font-size:13px}.h{font-size:12px;color:#5d6b63}'+
-'</style><div class="p"><div class="hd"><h1>Descritivo · '+esc(d.ref||'imóvel')+'</h1><span><button class="x" id="rf" title="Atualizar com o imóvel aberto">↻</button><button class="x" id="x" title="Fechar">×</button></span></div>'+
+'</style><div class="p"><div class="hd"><h1>Descritivo · '+esc(d.ref||'imóvel novo')+'</h1><span><button class="x" id="rf" title="Atualizar com o imóvel aberto">↻</button><button class="x" id="x" title="Fechar">×</button></span></div>'+
 '<div class="sec"><div class="hd"><h2>Resumo para o Google</h2><span class="n" id="cr"></span></div><p class="r" id="rs"></p><div class="chips" id="ch"></div>'+
 '<label class="h">Gancho no fim <select id="g"><option value="auto">Pela ficha</option><option>Aceita financiamento</option><option>Aceita permuta</option><option>Aceita financiamento e permuta</option><option>Pronta para morar</option><option>Pronto para morar</option><option value="">Sem gancho</option></select></label>'+
 '<ul id="cl"></ul><div id="al" style="display:grid;gap:6px"></div></div>'+
+'<div class="sec"><h2>Do corretor</h2><label class="h">O que só quem visitou sabe<textarea id="nt" style="min-height:80px" placeholder="Ex.: Suítes com armários planejados. Sol da manhã na sala. Cozinha reformada em 2025."></textarea></label><label class="h">O que fica perto<textarea id="px" style="min-height:60px" placeholder="Ex.: A 5 minutos do Shopping Jaraguá e perto da Rodovia Santos Dumont."></textarea></label><span class="h">Essas frases entram no texto novo. Escreva antes de editar o texto final.</span></div>'+
 '<div class="sec"><div class="hd"><h2>Título para portais</h2><span class="n" id="ct"></span></div><input id="ti" maxlength="150"></div>'+
 '<div class="sec"><div class="hd"><h2>Descrição do site</h2><span class="n" id="cd"></span></div>'+
-'<div class="seg"><label><input type="radio" name="m" value="atual" checked> Resumo + texto atual</label><label><input type="radio" name="m" value="novo"> Resumo + texto novo</label></div>'+
+'<div class="seg"><label><input type="radio" name="m" value="atual"> Resumo + texto atual</label><label><input type="radio" name="m" value="novo"> Resumo + texto novo</label></div>'+
 '<textarea id="ds"></textarea><span class="h">Você pode editar aqui antes de preencher.</span></div>'+
 '<div class="acts"><button class="b b1" id="ap">Preencher na Kenlo</button><button class="b b2" id="cp">Copiar descrição</button><span class="ok2" id="ms"></span></div>'+
 '<span class="h">O botão só preenche os campos. Confira e clique em Salvar na Kenlo.</span></div>';
@@ -140,7 +144,9 @@ function render(keepText){
  var L=[[!!(d.tipo&&d.cidade),'Tipo, "'+pret+'" e cidade logo no começo'],[conc>=2,'Pelo menos 2 diferenciais concretos'],[r.s.length<=LIM,'No máximo '+LIM+' caracteres, frase completa']];
  q('cl').innerHTML=L.map(function(x){return '<li class="'+(x[0]?'ok':'no')+'">'+esc(x[1])+'</li>'}).join('');
  var A=[];if(r.cut.length)A.push('Para caber em '+LIM+' caracteres ficou de fora: '+r.cut.join(', ')+'.');
+ if(!d.tipo)A.push('Escolha o tipo do imóvel na ficha e clique em ↻ no topo do painel.');
  if(!d.cidade)A.push('A cidade está vazia na ficha.');
+ if(!d.ref)A.push('O código do imóvel só existe depois de salvar. Depois de salvar, o painel se atualiza sozinho; se não atualizar, clique em ↻ para o código entrar no título e na descrição.');
  var tx=q('ds').value.slice(r.s.length);
  if(/financ/i.test(tx)&&d.fin!=='Sim')A.push('O texto fala em financiamento, mas o campo "Aceita financiamento" está "'+(d.fin||'vazio')+'". Ajuste a ficha ou o texto.');
  if(/permuta/i.test(tx)&&d.perm!=='Sim')A.push('O texto fala em permuta, mas o campo "Aceita permuta?" está "'+(d.perm||'vazio')+'".');
@@ -152,6 +158,10 @@ function render(keepText){
 function setVal(el,val){var proto=el.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;var s=Object.getOwnPropertyDescriptor(proto,'value').set;s.call(el,val);['input','change','keyup','blur'].forEach(function(t){el.dispatchEvent(new Event(t,{bubbles:true}))});if(window.jQuery)try{jQuery(el).trigger('change')}catch(e){}}
 q('x').onclick=function(){if(window.__dkT)clearInterval(window.__dkT);host.remove()};
 q('rf').onclick=function(){run()};
+R.querySelector('input[name=m][value='+modo+']').checked=true;
+q('nt').value=N.nt;q('px').value=N.px;
+q('nt').oninput=function(){N.nt=this.value;if(modo==='novo')render(false)};
+q('px').oninput=function(){N.px=this.value;if(modo==='novo')render(false)};
 q('g').onchange=function(){gancho=this.value;render(false)};
 q('ti').oninput=function(){this.dataset.touched=1;render(true)};
 q('ds').oninput=function(){render(true)};
